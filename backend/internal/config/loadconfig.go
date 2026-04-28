@@ -1,0 +1,104 @@
+package config
+
+import (
+	"errors"
+	"fmt"
+	"os"
+
+	"gopkg.in/yaml.v3"
+)
+
+type Config struct {
+	Server              ServerConfig        `yaml:"server"`
+	Database            DatabaseConfig      `yaml:"database"`
+	Redis               RedisConfig         `yaml:"redis"`
+	RabbitMQ            RabbitMQConfig      `yaml:"rabbitMQ"`
+	ObservabilityConfig ObservabilityConfig `yaml:"observability"`
+	Pprof               PprofConfig         `yaml:"pprof"`
+}
+type ServerConfig struct {
+	Port int `yaml:"port"`
+}
+type DatabaseConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	DBName   string `yaml:"DBname"`
+}
+type RedisConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Password string `yaml:"password"`
+	DB       int    `yaml:"db"`
+}
+type RabbitMQConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+}
+type ObservabilityConfig struct {
+	Pprof PprofConfig `yaml:"pprof"`
+}
+type PprofConfig struct {
+	Enabled    bool   `yaml:"enabled"`
+	ApiAddr    string `yaml:"api_addr"`
+	WorkerAddr string `yaml:"worker_addr"`
+}
+
+func Load(filename string) (Config, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return Config{}, fmt.Errorf("failed to read config file: %w", err)
+	}
+	var cfg Config
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return Config{}, fmt.Errorf("parse config %s %v", filename, err)
+	}
+	return cfg, nil
+}
+func LoadLocalDev(filename string) (Config, bool, error) {
+	cfg, err := Load(filename)
+	if err == nil {
+		return cfg, false, nil
+	}
+	if errors.Is(err, os.ErrNotExist) {
+		return DefaultLocalConfig(), true, nil
+	}
+	return Config{}, false, nil
+
+}
+func DefaultLocalConfig() Config {
+	return Config{
+		Server: ServerConfig{
+			Port: 8080,
+		},
+		Database: DatabaseConfig{
+			Host:     "localhost",
+			Port:     3306,
+			User:     "root",
+			Password: "123456",
+			DBName:   "feedsystem",
+		},
+		Redis: RedisConfig{
+			Host:     "localhost",
+			Port:     6379,
+			Password: "123456",
+			DB:       0,
+		},
+		RabbitMQ: RabbitMQConfig{
+			Host:     "localhost",
+			Port:     5672,
+			Username: "admin",
+			Password: "password123",
+		},
+		ObservabilityConfig: ObservabilityConfig{
+			Pprof: PprofConfig{
+				Enabled:    true,
+				ApiAddr:    "localhost:6060",
+				WorkerAddr: "localhost:6061",
+			},
+		},
+	}
+}
