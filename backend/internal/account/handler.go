@@ -114,7 +114,7 @@ func (ah *AccountHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	} else {
-		c.JSON(http.StatusOK, token)
+		c.JSON(http.StatusOK, gin.H{"token": token})
 	}
 }
 func (ah *AccountHandler) Logout(c *gin.Context) {

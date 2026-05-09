@@ -1,0 +1,8 @@
+server: 8080
+
+database:
+  host: localhost
+  port: 3306
+  user: root
+  passsword: 12345678
+  dbname: feedsystem

@@ -134,10 +134,10 @@ func (as *AccountService) Logout(ctx context.Context, accountID uint) error {
 	if account.Token == "" {
 		return nil
 	}
-	if as.cache == nil {
+	if as.cache != nil {
 		cacheCtx, cancel := context.WithTimeout(ctx, 50*time.Millisecond)
 		defer cancel()
-		if err := as.cache.DelBytes(cacheCtx, fmt.Sprintf("account:%d", account.ID)); err != nil {
+		if err := as.cache.Del(cacheCtx, fmt.Sprintf("account:%d", account.ID)); err != nil {
 			log.Printf("failed to del cache: %v", err)
 		}
 	}

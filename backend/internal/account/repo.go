@@ -51,7 +51,7 @@ func (ar *AccountRepository) FindByID(ctx context.Context, id uint) (*Account, e
 }
 func (ar *AccountRepository) FindByUsername(ctx context.Context, username string) (*Account, error) {
 	var account Account
-	if err := ar.db.WithContext(ctx).First(&account, username).Error; err != nil {
+	if err := ar.db.WithContext(ctx).Where("username = ?", username).First(&account).Error; err != nil {
 		return nil, err
 	}
 	return &account, nil

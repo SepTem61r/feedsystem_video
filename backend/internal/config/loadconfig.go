@@ -12,7 +12,7 @@ type Config struct {
 	Server              ServerConfig        `yaml:"server"`
 	Database            DatabaseConfig      `yaml:"database"`
 	Redis               RedisConfig         `yaml:"redis"`
-	RabbitMQ            RabbitMQConfig      `yaml:"rabbitMQ"`
+	RabbitMQ            RabbitMQConfig      `yaml:"rabbitmq"`
 	ObservabilityConfig ObservabilityConfig `yaml:"observability"`
 	Pprof               PprofConfig         `yaml:"pprof"`
 }
@@ -78,7 +78,7 @@ func DefaultLocalConfig() Config {
 			Host:     "localhost",
 			Port:     3306,
 			User:     "root",
-			Password: "123456",
+			Password: "12345678",
 			DBName:   "feedsystem",
 		},
 		Redis: RedisConfig{

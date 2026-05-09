@@ -1,7 +1,7 @@
 package account
 
 type Account struct {
-	ID       uint   `grom:"primaryKey" json:"id"`
+	ID       uint   `gorm:"primaryKey" json:"id"`
 	Username string `gorm:"unique" json:"username"`
 	Password string `json:"-"`
 	Token    string `json:"-"`
@@ -30,7 +30,7 @@ type FindByUsernameRequest struct {
 }
 type FindByUsernameResponse struct {
 	ID       uint   `json:"id"`
-	Usernaem string `json:"usernaem"`
+	Username string `json:"usernaem"`
 }
 type LoginResquest struct {
 	Username string `json:"username"`

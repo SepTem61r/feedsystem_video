@@ -11,7 +11,7 @@ func (c *Client) GetBytes(ctx context.Context, key string) ([]byte, error) {
 func (c *Client) SetBytes(ctx context.Context, key string, value []byte, ttl time.Duration) error {
 	return c.rdb.Set(ctx, key, value, ttl).Err()
 }
-func (c *Client) DelBytes(ctx context.Context, key string) error {
+func (c *Client) Del(ctx context.Context, key string) error {
 	return c.rdb.Del(ctx, key).Err()
 }
 func (c *Client) MGet(cacheCtx context.Context, cacheKeys ...string) ([]interface{}, error) {
