@@ -47,7 +47,7 @@ feedsystem_video/
 
 已完成：account、video（含 like/comment）、social 全部 CRUD + 路由注册 + AutoMigrate + JWT + Redis + RabbitMQ。
 
-待开发：feed 流、worker 消费端、pprof、Dockerfile、前端。
+待开发：feed 流、worker 消费端、pprof、Dockerfile、前端
 
 ## 部署方式
 
