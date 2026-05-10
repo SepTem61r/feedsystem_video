@@ -68,10 +68,10 @@ func (vs *VideoService) Delete(ctx context.Context, id uint, authorID uint) erro
 		return err
 	}
 	if video == nil {
-		return err
+		return errors.New("video not found")
 	}
 	if video.AuthorID != authorID {
-		return err
+		return errors.New("unauthorized")
 	}
 	if err := vs.repo.DelVideo(ctx, id); err != nil {
 		return err

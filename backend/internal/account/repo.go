@@ -37,7 +37,7 @@ func (ar *AccountRepository) RenameWithToken(ctx context.Context, id uint, newUs
 	})
 }
 func (ar *AccountRepository) ChangePassword(ctx context.Context, id uint, NewPassword string) error {
-	if err := ar.db.WithContext(ctx).Where("id = ?", id).Update("password", NewPassword).Error; err != nil {
+	if err := ar.db.WithContext(ctx).Model(&Account{}).Where("id = ?", id).Update("password", NewPassword).Error; err != nil {
 		return err
 	}
 	return nil

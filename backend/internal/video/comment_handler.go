@@ -27,9 +27,11 @@ func (ch *CommentHandler) PublishComment(c *gin.Context) {
 	}
 	if req.VideoID <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "video_id need > 0"})
+		return
 	}
 	if req.Content == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "content is require"})
+		return
 	}
 	authorID, err := jwt.GetAccountID(c)
 	if err != nil {
@@ -61,7 +63,7 @@ func (ch *CommentHandler) DeleteComment(c *gin.Context) {
 		return
 	}
 	if req.CommentID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "coment_id is require"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "comment_id is required"})
 		return
 	}
 	accountID, err := jwt.GetAccountID(c)

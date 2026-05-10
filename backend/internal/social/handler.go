@@ -35,7 +35,7 @@ func (sh *SocialHandler) Follow(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"messagr": "follow success"})
+	c.JSON(http.StatusOK, gin.H{"message": "follow success"})
 }
 
 // unfollow
@@ -56,6 +56,7 @@ func (sh *SocialHandler) Unfollow(c *gin.Context) {
 	}
 	if err := sh.socialService.Unfollow(c.Request.Context(), social); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "unfollow success"})
 }
@@ -84,6 +85,7 @@ func (sh *SocialHandler) GetAllFollowers(c *gin.Context) {
 	c.JSON(http.StatusOK, GetAllFollowersResponse{Followers: followers})
 }
 
+// GetAllVloggers
 func (sh *SocialHandler) GetAllVloggers(c *gin.Context) {
 	var req GetAllVloggersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

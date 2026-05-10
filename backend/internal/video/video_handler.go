@@ -106,6 +106,7 @@ func (vh *VideoHandler) UpdateLikesCount(c *gin.Context) {
 	}
 	if err := vh.videoService.UpdateLikesCount(c.Request.Context(), req.ID, req.LikeCount); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "UpdateLikesCount success"})
 }
@@ -158,7 +159,7 @@ func (vh *VideoHandler) UploadCover(c *gin.Context) {
 		return
 	}
 	const MaxSize = 10 << 20
-	if f.Size <= 0 || f.Size > 10 {
+	if f.Size <= 0 || f.Size > MaxSize {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file size"})
 		return
 	}

@@ -96,7 +96,7 @@ func (cs *CommentService) Delete(ctx context.Context, commentID, accountID uint)
 	if comment == nil {
 		return errors.New("comment not found")
 	}
-	if comment.AuthorID != commentID {
+	if comment.AuthorID != accountID {
 		return errors.New("permission denied")
 	}
 	if cs.commentMQ != nil {

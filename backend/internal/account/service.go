@@ -22,6 +22,8 @@ type AccountService struct {
 var (
 	ErrUsernameTaken       = errors.New("username already exists")
 	ErrNewUsernameRequired = errors.New("new_username is required")
+	ErrPasswordTooShort    = errors.New("password must be at least 6 characters")
+	ErrUsernameRequired    = errors.New("username is required")
 )
 
 func NewAccountService(accountRepository *AccountRepository, cache *rediscache.Client) *AccountService {
@@ -29,6 +31,12 @@ func NewAccountService(accountRepository *AccountRepository, cache *rediscache.C
 }
 
 func (as *AccountService) CreatAccount(ctx context.Context, account *Account) error {
+	if account.Username == "" {
+		return ErrUsernameRequired
+	}
+	if len(account.Password) < 6 {
+		return ErrPasswordTooShort
+	}
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(account.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -117,7 +125,7 @@ func (as *AccountService) Login(ctx context.Context, username, password string) 
 	if err := as.accountRepository.Login(ctx, account.ID, token); err != nil {
 		return "", err
 	}
-	if as.cache == nil {
+	if as.cache != nil {
 		cacheCtx, cancel := context.WithTimeout(ctx, 50*time.Millisecond)
 		defer cancel()
 		if err := as.cache.SetBytes(cacheCtx, fmt.Sprintf("account:%d", account.ID), []byte(token), 24*time.Hour); err != nil {

@@ -123,7 +123,7 @@ func (ls *LikeService) Unlike(ctx context.Context, like *Like) error {
 		}
 	}
 	if ls.popularMQ != nil {
-		if err := ls.popularMQ.Update(ctx, like.VideoID, 1); err == nil {
+		if err := ls.popularMQ.Update(ctx, like.VideoID, -1); err == nil {
 			redisEnqueued = true
 		}
 	}
@@ -143,7 +143,7 @@ func (ls *LikeService) Unlike(ctx context.Context, like *Like) error {
 				UpdateColumn("likes_count", gorm.Expr("GREATEST(likes_count - 1, 0)")).Error; err != nil {
 				return err
 			}
-			return tx.Model(&Video{}).Where("id = ?", like.VideoID).UpdateColumn("popularity", gorm.Expr("GREATESE(popularity - 1 ,0)")).Error
+			return tx.Model(&Video{}).Where("id = ?", like.VideoID).UpdateColumn("popularity", gorm.Expr("GREATEST(popularity - 1 ,0)")).Error
 		})
 		if err != nil {
 			return err

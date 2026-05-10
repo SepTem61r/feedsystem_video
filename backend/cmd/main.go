@@ -4,14 +4,11 @@ import (
 	"fmt"
 	"log"
 
-	"feedsystem_video/backend/internal/account"
 	"feedsystem_video/backend/internal/config"
 	"feedsystem_video/backend/internal/db"
-	"feedsystem_video/backend/internal/middleware/jwt"
+	internalhttp "feedsystem_video/backend/internal/http"
 	"feedsystem_video/backend/internal/middleware/rabbitmq"
 	rediscache "feedsystem_video/backend/internal/middleware/redis"
-
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -39,29 +36,14 @@ func main() {
 	}
 	defer redisClient.Close()
 
-	rabbitClient, err := rabbitmq.NewFromEnv(&cfg.RabbitMQ)
+	rabbitClient, err := rabbitmq.NewRabbitMQ(&cfg.RabbitMQ)
 	if err != nil {
 		log.Printf("warning: failed to connect to rabbitmq: %v", err)
 	} else {
 		defer rabbitClient.Close()
 	}
 
-	accountRepo := account.NewAccountRepository(database)
-	accountSvc := account.NewAccountService(accountRepo, redisClient)
-	accountHandler := account.NewAccountHandler(accountSvc)
-
-	r := gin.Default()
-
-	r.POST("/api/account/register", accountHandler.CreateAccount)
-	r.POST("/api/account/login", accountHandler.Login)
-
-	auth := r.Group("/api/account")
-	auth.Use(jwt.JWTAuth(accountRepo, redisClient))
-	{
-		auth.POST("/rename", accountHandler.Rename)
-		auth.POST("/change-password", accountHandler.ChangePassword)
-		auth.POST("/logout", accountHandler.Logout)
-	}
+	r := internalhttp.SetRouter(database, redisClient, rabbitClient)
 
 	addr := fmt.Sprintf(":%d", cfg.Server.Port)
 	log.Printf("server starting on %s", addr)

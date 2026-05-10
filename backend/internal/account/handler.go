@@ -25,7 +25,12 @@ func (ah *AccountHandler) CreateAccount(c *gin.Context) {
 		Username: req.Username,
 		Password: req.Password,
 	}); err != nil {
+		if errors.Is(err, ErrUsernameRequired) || errors.Is(err, ErrPasswordTooShort) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "user create success"})
 }

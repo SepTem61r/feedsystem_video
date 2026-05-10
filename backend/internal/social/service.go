@@ -36,7 +36,7 @@ func (ss *SocialService) Follow(ctx context.Context, social *Social) error {
 	}
 	isFollowed, err := ss.socialRepo.IsFollowed(ctx, social)
 	if err != nil {
-		return nil
+		return err
 	}
 	if isFollowed {
 		return errors.New("already follow")
@@ -64,7 +64,7 @@ func (ss *SocialService) Unfollow(ctx context.Context, social *Social) error {
 	}
 	isFollowed, err := ss.socialRepo.IsFollowed(ctx, social)
 	if err != nil {
-		return nil
+		return err
 	}
 	if !isFollowed {
 		return errors.New("already unfollow")

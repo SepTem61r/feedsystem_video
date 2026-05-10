@@ -2,3 +2,6 @@
 *.exe
 vendor/
 .env
+# 忽略静态资源和上传的音视频文件
+/backend/static/videos/
+/backend/static/covers/

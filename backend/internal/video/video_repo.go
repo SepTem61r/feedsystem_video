@@ -43,7 +43,8 @@ func (vr *VideoRepository) ListByAuthorID(ctx context.Context, authorID uint) ([
 	var videos []Video
 	if err := vr.db.WithContext(ctx).
 		Where("author_id = ?", authorID).
-		Order("create_time des").
+		Order("createtime desc").
+		Offset(0).
 		Find(&videos).Error; err != nil {
 		return nil, err
 	}

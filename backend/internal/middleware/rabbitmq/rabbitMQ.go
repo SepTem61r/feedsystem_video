@@ -22,7 +22,7 @@ func NewRabbitMQ(cfg *config.RabbitMQConfig) (*RabbitMQ, error) {
 	if cfg == nil {
 		return nil, errors.New("rabbitmq cfg is nil")
 	}
-	url := "ampq://" + cfg.Username + ":" + cfg.Password + "@" + cfg.Host + ":" + strconv.Itoa(cfg.Port)
+	url := "amqp://" + cfg.Username + ":" + cfg.Password + "@" + cfg.Host + ":" + strconv.Itoa(cfg.Port)
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		return nil, err
