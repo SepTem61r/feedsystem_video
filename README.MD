@@ -1,5 +1,5 @@
 /
-feedsystem_video_go-main/                                                                                                                                                                                                                        
+feedsystem_video/                                                                                                                                                                                                                        
 ├── backend/                    # Go 后端                                                                                                                                                                                                        
 │   ├── go.mod / go.sum         # Go 模块依赖                                                                                                                                                                                                    
 │   ├── Dockerfile              # 多阶段构建（api / worker 两个 target）                                                                                                                                                                         
