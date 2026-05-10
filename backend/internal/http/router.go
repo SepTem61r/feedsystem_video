@@ -26,7 +26,7 @@ func SetRouter(db *gorm.DB, cache *rediscache.Client, rmq *rabbitmq.RabbitMQ) *g
 	registerLimiter := ratelimit.Limit(cache, "account_register", 5, time.Hour, ratelimit.KeyByIP)
 
 	likeLimiter := ratelimit.Limit(cache, "like_write", 30, time.Minute, ratelimit.KeyByAccount)
-	//commentLimiter := ratelimit.Limit(cache, "comment_write", 10, time.Minute, ratelimit.KeyByAccount)
+	commentLimiter := ratelimit.Limit(cache, "comment_write", 10, time.Minute, ratelimit.KeyByAccount)
 	//socialLimiter := ratelimit.Limit(cache, "social_write", 20, time.Minute, ratelimit.KeyByAccount)
 
 	//account
@@ -91,5 +91,26 @@ func SetRouter(db *gorm.DB, cache *rediscache.Client, rmq *rabbitmq.RabbitMQ) *g
 		protectedLikeGroup.POST("/isLiked", likeHandler.IsLiked)
 		protectedLikeGroup.POST("/listMyLikedVideos", likeHandler.ListMyLikedVideos)
 	}
+
+	//comment
+	commentMQ, err := rabbitmq.NewCommentMQ(rmq)
+	if err != nil {
+		log.Printf("commentMQ init failed (mq disabled): %v", err)
+		commentMQ = nil
+	}
+	commentRepository := video.NewCommentRepository(db)
+	commentService := video.NewCommentService(commentRepository, cache, popularityMQ, videoRepository, commentMQ)
+	commentHandler := video.NewCommentHandler(commentService, accountRepository)
+	commentGourp := r.Group("/comment")
+	{
+		commentGourp.POST("/getAll", commentHandler.GetAllComment)
+	}
+	protcetedCommentGroup := commentGourp.Group("")
+	protcetedCommentGroup.Use(jwt.JWTAuth(accountRepository, cache))
+	{
+		protcetedCommentGroup.POST("/publish", commentLimiter, commentHandler.PublishComment)
+		protcetedCommentGroup.POST("/delete", commentLimiter, commentHandler.DeleteComment)
+	}
+
 	return r
 }
