@@ -1,6 +1,11 @@
 package social
 
-import "gorm.io/gorm"
+import (
+	"context"
+	"feedsystem_video/backend/internal/account"
+
+	"gorm.io/gorm"
+)
 
 type SocialRepository struct {
 	db *gorm.DB
