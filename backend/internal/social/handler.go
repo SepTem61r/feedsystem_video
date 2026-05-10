@@ -15,6 +15,7 @@ func NewSocialHandler(socialService *SocialService) *SocialHandler {
 	return &SocialHandler{socialService: socialService}
 }
 
+// follow
 func (sh *SocialHandler) Follow(c *gin.Context) {
 	var req FollowerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -36,6 +37,8 @@ func (sh *SocialHandler) Follow(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"messagr": "follow success"})
 }
+
+// unfollow
 func (sh *SocialHandler) Unfollow(c *gin.Context) {
 	var req UnFollowerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -56,6 +59,8 @@ func (sh *SocialHandler) Unfollow(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "unfollow success"})
 }
+
+// GetAllFollowers
 func (sh *SocialHandler) GetAllFollowers(c *gin.Context) {
 	var req GetAllFollowersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
