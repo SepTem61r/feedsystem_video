@@ -72,7 +72,7 @@ func (as *AccountService) ChangePassword(ctx context.Context, username, oldPassw
 	if err != nil {
 		return err
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(newPassword)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(oldPassword)); err != nil {
 		return err
 	}
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)

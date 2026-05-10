@@ -101,15 +101,15 @@ func SetRouter(db *gorm.DB, cache *rediscache.Client, rmq *rabbitmq.RabbitMQ) *g
 	commentRepository := video.NewCommentRepository(db)
 	commentService := video.NewCommentService(commentRepository, cache, popularityMQ, videoRepository, commentMQ)
 	commentHandler := video.NewCommentHandler(commentService, accountRepository)
-	commentGourp := r.Group("/comment")
+	commentGroup := r.Group("/comment")
 	{
-		commentGourp.POST("/getAll", commentHandler.GetAllComment)
+		commentGroup.POST("/getAll", commentHandler.GetAllComment)
 	}
-	protcetedCommentGroup := commentGourp.Group("")
-	protcetedCommentGroup.Use(jwt.JWTAuth(accountRepository, cache))
+	protectedCommentGroup := commentGroup.Group("")
+	protectedCommentGroup.Use(jwt.JWTAuth(accountRepository, cache))
 	{
-		protcetedCommentGroup.POST("/publish", commentLimiter, commentHandler.PublishComment)
-		protcetedCommentGroup.POST("/delete", commentLimiter, commentHandler.DeleteComment)
+		protectedCommentGroup.POST("/publish", commentLimiter, commentHandler.PublishComment)
+		protectedCommentGroup.POST("/delete", commentLimiter, commentHandler.DeleteComment)
 	}
 
 	return r

@@ -83,9 +83,9 @@ func (ah *AccountHandler) FindByID(c *gin.Context) {
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
-	} else {
-		c.JSON(200, account)
 	}
+
+	c.JSON(200, account)
 
 }
 func (ah *AccountHandler) FindByUsername(c *gin.Context) {
@@ -98,13 +98,12 @@ func (ah *AccountHandler) FindByUsername(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
-	} else {
-		c.JSON(http.StatusOK, account)
 	}
+	c.JSON(http.StatusOK, account)
 
 }
 func (ah *AccountHandler) Login(c *gin.Context) {
-	var req LoginResquest
+	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -113,9 +112,9 @@ func (ah *AccountHandler) Login(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
-	} else {
-		c.JSON(http.StatusOK, gin.H{"token": token})
 	}
+	c.JSON(http.StatusOK, gin.H{"token": token})
+
 }
 func (ah *AccountHandler) Logout(c *gin.Context) {
 	accountID, err := ah.GetAccountID(c)
@@ -127,9 +126,8 @@ func (ah *AccountHandler) Logout(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
-	} else {
-		c.JSON(http.StatusOK, gin.H{"message": "logout success"})
 	}
+	c.JSON(http.StatusOK, gin.H{"message": "logout success"})
 
 }
 func (ah *AccountHandler) GetAccountID(c *gin.Context) (uint, error) {

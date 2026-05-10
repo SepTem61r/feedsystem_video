@@ -30,9 +30,9 @@ type FindByUsernameRequest struct {
 }
 type FindByUsernameResponse struct {
 	ID       uint   `json:"id"`
-	Username string `json:"usernaem"`
+	Username string `json:"username"`
 }
-type LoginResquest struct {
+type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }

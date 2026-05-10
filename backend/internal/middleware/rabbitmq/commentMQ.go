@@ -61,7 +61,7 @@ func (cMQ *CommentMQ) publish(ctx context.Context, action, routingKey string, ev
 	return cMQ.PublishJSON(ctx, commentExchange, routingKey, evt)
 }
 func (cMQ *CommentMQ) Delete(ctx context.Context, commentID uint) error {
-	return cMQ.publish(ctx, "delete", commentPublishRK, CommentEvent{
+	return cMQ.publish(ctx, "delete", commentDeleteRK, CommentEvent{
 		CommentID: commentID,
 	})
 }
