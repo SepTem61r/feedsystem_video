@@ -6,6 +6,7 @@ import (
 	"feedsystem_video/backend/internal/middleware/rabbitmq"
 	"feedsystem_video/backend/internal/middleware/ratelimit"
 	rediscache "feedsystem_video/backend/internal/middleware/redis"
+	"feedsystem_video/backend/internal/social"
 	"feedsystem_video/backend/internal/video"
 	"log"
 	"time"
@@ -27,7 +28,7 @@ func SetRouter(db *gorm.DB, cache *rediscache.Client, rmq *rabbitmq.RabbitMQ) *g
 
 	likeLimiter := ratelimit.Limit(cache, "like_write", 30, time.Minute, ratelimit.KeyByAccount)
 	commentLimiter := ratelimit.Limit(cache, "comment_write", 10, time.Minute, ratelimit.KeyByAccount)
-	//socialLimiter := ratelimit.Limit(cache, "social_write", 20, time.Minute, ratelimit.KeyByAccount)
+	socialLimiter := ratelimit.Limit(cache, "social_write", 20, time.Minute, ratelimit.KeyByAccount)
 
 	//account
 	accountRepository := account.NewAccountRepository(db)
@@ -111,6 +112,23 @@ func SetRouter(db *gorm.DB, cache *rediscache.Client, rmq *rabbitmq.RabbitMQ) *g
 		protectedCommentGroup.POST("/publish", commentLimiter, commentHandler.PublishComment)
 		protectedCommentGroup.POST("/delete", commentLimiter, commentHandler.DeleteComment)
 	}
-
+	//social
+	socialMQ, err := rabbitmq.NewSocialMQ(rmq)
+	if err != nil {
+		log.Printf("socialMQ init failed (mq disabled): %v", err)
+		socialMQ = nil
+	}
+	socialRepo := social.NewSocialRepository(db)
+	socialService := social.NewSocialService(socialRepo, accountRepository, socialMQ)
+	socialHandler := social.NewSocialHandler(socialService)
+	socialGroup := r.Group("/social")
+	protectedSocialGroup := socialGroup.Group("")
+	protectedSocialGroup.Use(jwt.JWTAuth(accountRepository, cache))
+	{
+		protectedSocialGroup.POST("/follow", socialLimiter, socialHandler.Follow)
+		protectedSocialGroup.POST("/unfollow", socialLimiter, socialHandler.Unfollow)
+		protectedSocialGroup.POST("/getallfollowers", socialHandler.GetAllFollowers)
+		protectedSocialGroup.POST("/getallvloggers", socialHandler.GetAllVloggers)
+	}
 	return r
 }

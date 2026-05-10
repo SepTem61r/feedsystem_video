@@ -1,12 +1,16 @@
 package social
 
 import (
+	"context"
+	"errors"
 	"feedsystem_video/backend/internal/account"
+	"feedsystem_video/backend/internal/middleware/rabbitmq"
 )
 
 type SocialService struct {
-	socialRepository  *SocialRepository
-	accountRepository *account.AccountRepository
+	socialRepo  *SocialRepository
+	accountRepo *account.AccountRepository
+	socialMQ    *rabbitmq.SocialMQ
 }
 
 func NewSocialService(socialRepo *SocialRepository, accountRepo *account.AccountRepository, socialMQ *rabbitmq.SocialMQ) *SocialService {
