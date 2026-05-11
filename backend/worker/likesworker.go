@@ -68,7 +68,7 @@ func (lw *LikeWorker) handlerDelivery(ctx context.Context, d amqp.Delivery) {
 
 }
 func (lw *LikeWorker) process(ctx context.Context, body []byte) error {
-	var evt *rabbitmq.LikesCountEvent
+	var evt rabbitmq.LikesCountEvent
 	if err := json.Unmarshal(body, &evt); err != nil {
 		return nil
 	}
