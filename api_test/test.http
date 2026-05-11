@@ -1,0 +1,236 @@
+### Account（账号模块）
+
+
+### 注册
+POST http://localhost:8080/account/register
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "123456"
+}
+
+### 登录（拿到 token）
+POST http://localhost:8080/account/login
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "123456"
+}
+
+### 改名
+POST http://localhost:8080/account/rename
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoyLCJ1c2VybmFtZSI6ImFsaWNlIiwiZXhwIjoxNzc4NTAzODEzLCJuYmYiOjE3Nzg0MTc0MTMsImlhdCI6MTc3ODQxNzQxM30.tGjcl6NeAuCrFQgYeO6X2xMZ-gWr3g0RXhk82x3JhqU
+
+{
+  "new_username": "alice_new"
+}
+
+### 改密码
+POST http://localhost:8080/account/changePassword
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoyLCJ1c2VybmFtZSI6ImFsaWNlX25ldyIsImV4cCI6MTc3ODUwMzg0NywibmJmIjoxNzc4NDE3NDQ3LCJpYXQiOjE3Nzg0MTc0NDd9.pLFC5V8HuHwiKOvz8BmHBjZa8YTi3Q7fizId_Z7wRKs
+
+{
+  "username": "alice_new",
+  "old_password": "123456",
+  "new_password": "654321"
+}
+
+### 再次登录
+POST http://localhost:8080/account/login
+Content-Type: application/json
+
+{
+  "username": "alice_new",
+  "password": "654321"
+}
+
+> {%
+    // 假设你的 Gin 后端返回的格式是 {"code": 0, "data": {"token": "ey..."}}
+    // 根据你实际的 JSON 结构调整层级
+    var token = response.body.token;
+
+    // 将其保存为全局变量，命名为 auth_token
+    client.global.set("auth_token", token);
+
+    // 打印到控制台方便调试
+    client.log("成功获取并保存 Token: " + token);
+%}
+
+### 登出
+POST http://localhost:8080/account/logout
+Authorization: Bearer {{auth_token}}
+
+
+
+### Video（视频模块）
+
+
+### 发布视频
+POST http://localhost:8080/video/publish
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "title": "my first video",
+  "description": "test1",
+  "play_url": "/static/videos/1/20260510/test1.mp4",
+  "cover_url": "/static/covers/1/20260510/bird.jpg"
+}
+
+### 发布视频
+POST http://localhost:8080/video/publish
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "title": "my second video",
+  "description": "test2",
+  "play_url": "/static/videos/1/20260511/test2.mp4",
+  "cover_url": "/static/covers/1/20260511/cat.jpg"
+}
+
+### 获取视频详情
+POST http://localhost:8080/video/getDetail
+Content-Type: application/json
+
+{
+  "id": 4
+
+}
+
+### 按作者查视频列表
+POST http://localhost:8080/video/listByButhorID
+Content-Type: application/json
+
+{
+  "author_id": 3
+}
+
+### 删除视频
+POST http://localhost:8080/video/delete
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "id": 1
+}
+
+
+
+### Like（点赞模块）
+
+
+### 点赞
+POST http://localhost:8080/like/like
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "video_id": 5
+}
+
+### 取消点赞
+POST http://localhost:8080/like/unlike
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "video_id": 3
+}
+
+### 查询是否已点赞
+POST http://localhost:8080/like/isLiked
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "video_id": 5
+}
+
+### 我的点赞列表
+POST http://localhost:8080/like/listMyLikedVideos
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+
+### Comment（评论模块）
+
+
+### 发评论
+POST http://localhost:8080/comment/publish
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "video_id": 3,
+  "content": "great video!"
+}
+
+### 发评论
+POST http://localhost:8080/comment/publish
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "video_id": 3,
+  "content": "bad video!"
+}
+
+### 查评论列表
+POST http://localhost:8080/comment/getAll
+Content-Type: application/json
+
+{
+  "video_id": 3
+}
+
+### 删评论
+POST http://localhost:8080/comment/delete
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "comment_id": 1,
+  "video_id": 3
+}
+
+
+# ==========================================
+# Social（关注模块）
+# ==========================================
+
+### 关注
+POST http://localhost:8080/social/follow
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "vlogger_id": 3
+}
+
+### 取关
+POST http://localhost:8080/social/unfollow
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "vlogger_id": 3
+}
+
+### 粉丝列表
+POST http://localhost:8080/social/getallfollowers
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{}
+
+### 关注列表
+POST http://localhost:8080/social/getallvloggers
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{}
