@@ -60,7 +60,7 @@ func (sr *SocialRepository) GetAllVloggers(ctx context.Context, folowerID uint) 
 }
 func (sr *SocialRepository) IsFollowed(ctx context.Context, social *Social) (bool, error) {
 	var count int64
-	if err := sr.db.WithContext(ctx).Where("follower_id = ? AND vlogger_id = ?", social.FollowerID, social.VloggerID).Count(&count).Error; err != nil {
+	if err := sr.db.WithContext(ctx).Model(&Social{}).Where("follower_id = ? AND vlogger_id = ?", social.FollowerID, social.VloggerID).Count(&count).Error; err != nil {
 		return false, err
 	}
 	return count > 0, nil

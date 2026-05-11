@@ -40,7 +40,7 @@ func (cr *CommentRepository) IsExist(ctx context.Context, id uint) (bool, error)
 
 func (cr *CommentRepository) GetById(ctx context.Context, id uint) (*Comment, error) {
 	var comment Comment
-	if err := cr.db.WithContext(ctx).Where("id = ?").First(&comment, id).Error; err != nil {
+	if err := cr.db.WithContext(ctx).First(&comment, id).Error; err != nil {
 		return &comment, err
 	}
 	return &comment, nil

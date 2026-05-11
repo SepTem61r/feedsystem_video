@@ -12,7 +12,7 @@ type PopularityMQ struct {
 
 const (
 	popularityExchange   = "video.popularity.events"
-	popularityQueue      = "video.popularity.events"
+	popularityQueue      = "video.popularity.cache.queue"
 	popularityBindingKey = "video.popularity.*"
 	popularityUpdateRK   = "video.popularity.update"
 )

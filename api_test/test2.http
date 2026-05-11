@@ -1,0 +1,202 @@
+### Account（账号模块）
+
+
+### 注册
+POST http://localhost:8080/account/register
+Content-Type: application/json
+
+{
+  "username": "bob",
+  "password": "123456"
+}
+
+### 登录（拿到 token）
+POST http://localhost:8080/account/login
+Content-Type: application/json
+
+{
+  "username": "bob",
+  "password": "123456"
+}
+
+> {%
+
+    var token = response.body.token;
+
+    client.global.set("auth_token", token);
+
+    client.log("成功获取并保存 Token: " + token);
+%}
+
+
+
+
+### Video（视频模块）
+
+
+### 发布视频
+POST http://localhost:8080/video/publish
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "title": "bob第一个视频",
+  "description": "test1",
+  "play_url": "/static/videos/1/20260510/test1.mp4",
+  "cover_url": "/static/covers/1/20260510/bird.jpg"
+}
+
+### 发布视频
+POST http://localhost:8080/video/publish
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "title": "bob第二个视频 ",
+  "description": "test2",
+  "play_url": "/static/videos/1/20260511/test2.mp4",
+  "cover_url": "/static/covers/1/20260511/cat.jpg"
+}
+
+### 获取视频详情
+POST http://localhost:8080/video/getDetail
+Content-Type: application/json
+
+{
+  "id": 3
+
+}
+
+### 按作者查视频列表
+# 注意：原命令中是 listByButhorID，可能是代码路由拼写错误，建议检查 Gin 路由是否为 listByAuthorID
+POST http://localhost:8080/video/listByButhorID
+Content-Type: application/json
+
+{
+  "author_id": 2
+}
+
+### 删除视频
+POST http://localhost:8080/video/delete
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "id": 1
+}
+
+
+
+### Like（点赞模块）
+
+
+### 点赞
+POST http://localhost:8080/like/like
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "video_id": 5
+}
+
+### 取消点赞
+POST http://localhost:8080/like/unlike
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "video_id": 3
+}
+
+### 查询是否已点赞
+POST http://localhost:8080/like/isLiked
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "video_id": 3
+}
+
+### 我的点赞列表
+POST http://localhost:8080/like/listMyLikedVideos
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+
+### Comment（评论模块）
+
+
+### 发评论
+POST http://localhost:8080/comment/publish
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "video_id": 3,
+  "content": "great video!"
+}
+
+### 发评论
+POST http://localhost:8080/comment/publish
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "video_id": 3,
+  "content": "bad video!"
+}
+
+### 查评论列表
+POST http://localhost:8080/comment/getAll
+Content-Type: application/json
+
+{
+  "video_id": 3
+}
+
+### 删评论
+POST http://localhost:8080/comment/delete
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "comment_id": 1,
+  "video_id": 3
+}
+
+
+
+### Social（关注模块）
+
+
+### 关注
+POST http://localhost:8080/social/follow
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "vlogger_id": 2
+}
+
+### 取关
+POST http://localhost:8080/social/unfollow
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "vlogger_id": 2
+}
+
+### 粉丝列表
+POST http://localhost:8080/social/getallfollowers
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{}
+
+### 关注列表
+POST http://localhost:8080/social/getallvloggers
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{}

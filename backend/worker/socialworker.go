@@ -33,7 +33,7 @@ func (sw *SocialWorker) Run(ctx context.Context) error {
 		return errors.New("social work is not initialized")
 	}
 	if sw.queue == "" {
-		return errors.New("queue is require")
+		return errors.New("queue is required")
 	}
 	deliverys, err := sw.ch.Consume(
 		sw.queue,

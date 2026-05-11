@@ -74,10 +74,10 @@ func (lr *LikeRepository) ListLikedVideos(ctx context.Context, accountID uint) (
 	if accountID == 0 {
 		return videos, nil
 	}
-	err := lr.db.WithContext(ctx).Model(&Like{}).
+	err := lr.db.WithContext(ctx).Model(&Video{}).
 		Joins("JOIN likes ON likes.video_id = videos.id").
-		Where("account_id = ?", accountID).
-		Order("likes,createtime desc").
+		Where("likes.account_id = ?", accountID).
+		Order("likes.created_at desc").
 		Find(&videos).Error
 	if err != nil {
 		return videos, err
