@@ -27,3 +27,14 @@ func (fr *FeedRepository) ListLatest(ctx context.Context, limit int, latestBefor
 	return videos, nil
 }
 func (fr *FeedRepository) ListLikesCount(ctx context.Context, limit int)
+func (fr *FeedRepository) GetByIDs(ctx context.Context, ids []uint) ([]*video.Video, error) {
+	var videos []*video.Video
+	if len(ids) == 0 {
+		return videos, nil
+	}
+	if err := fr.db.WithContext(ctx).Model(&video.Video{}).
+		Where("id IN ?", ids).Find(&videos).Error; err != nil {
+		return nil, err
+	}
+	return videos, nil
+}

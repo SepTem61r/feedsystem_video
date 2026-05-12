@@ -7,6 +7,7 @@ import (
 	"feedsystem_video/backend/internal/video"
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/patrickmn/go-cache"
 
@@ -44,50 +45,51 @@ func buildOrderedResult(orderedIDs []uint, dataMap map[uint]*video.Video) []*vid
 func (fs *FeedService) GetVideoByIDs(ctx context.Context, videoIDs []uint) ([]*video.Video, error) {
 	// GetVideoByIDs 批量获取视频信息
 	// 采用 L1(本地缓存) -> L2(Redis) -> L3(MySQL) 三级架构
-	if len(videoIDs) == 0 {
+	if len(videoIDs) == 0 || videoIDs == nil {
 		return []*video.Video{}, nil
 	}
-	videomap := make(map[uint]*video.Video)
-	//l1
+	videoMap := make(map[uint]*video.Video)
+	//L1
 	var missedL1 []uint
 	for _, id := range videoIDs {
-		cacheKey := fmt.Sprintf("video:entiy: %d", id)
+		cacheKey := fmt.Sprintf("video:entiy:%d", id)
+		fs.localcache.Get(cacheKey)
 		if fs.localcache != nil {
 			if v, found := fs.localcache.Get(cacheKey); found {
 				if data, ok := v.(video.Video); ok {
-					videomap[id] = &data
+					videoMap[id] = &data
 					continue
 				}
 			}
+			missedL1 = append(missedL1, id)
 		}
-		missedL1 = append(missedL1, id)
 	}
 	if len(missedL1) == 0 {
-		return buildOrderedResult(videoIDs, videomap), nil
+		return buildOrderedResult(videoIDs, videoMap), nil
 	}
-	//l2
+
+	//L2'redis
+
 	var missedL2 []uint
 	if len(missedL1) > 0 {
 		cacheKeys := make([]string, len(missedL1))
-		for i, id := range missedL1 {
-			cacheKeys[i] = fmt.Sprintf("video:entity:%d", id)
+		for _, id := range missedL1 {
+			cacheKeys[id] = fmt.Sprintf("video:entiy:%d", id)
 		}
-
-		cacheCtx, cancel := context.WithTimeout(ctx, 50*time.Millisecond)
-		results, err := fs.rediscache.MGet(cacheCtx, cacheKeys...)
-		cancel()
-
+		cacheCtx, cacnel := context.WithTimeout(ctx, 50*time.Millisecond)
+		result, err := fs.rediscache.MGet(cacheCtx, cacheKeys...)
+		cacnel()
 		if err == nil {
-			for i, res := range results {
+			for i, res := range result {
 				id := missedL1[i]
 				if res != nil {
 					if str, ok := res.(string); ok {
 						var v video.Video
 						if err := json.Unmarshal([]byte(str), &v); err == nil {
-							videomap[id] = &v
-							// 回写更新 L1 本地缓存
+							videoMap[id] = &v
 							if fs.localcache != nil {
-								fs.localcache.Set(cacheKeys[i], v, 5*time.Second)
+								//写入本地缓存
+								fs.localcache.Set(cacheKeys[id], v, time.Hour)
 							}
 							continue
 						}
@@ -96,13 +98,52 @@ func (fs *FeedService) GetVideoByIDs(ctx context.Context, videoIDs []uint) ([]*v
 				missedL2 = append(missedL2, id)
 			}
 		} else {
-			// 如果 Redis 挂了或者超时了，全部降级到 L3
 			missedL2 = missedL1
-			log.Printf("L2 Redis MGet 失败，全部降级到 MySQL: %v", err)
+			log.Fatal("L2 redis缓存失败，降级L3")
 		}
 	}
+	if len(missedL2) == 0 {
+		return buildOrderedResult(videoIDs, videoMap), nil
+	}
+	//L3
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	for _, id := range missedL2 {
+		wg.Add(1)
+		go func(videoID uint) {
+			defer wg.Done()
+			sfkey := fmt.Sprintf("sf:entiy:%d", videoID)
+			v, err, _ := fs.requestGroup.Do(sfkey, func() (interface{}, error) {
+				videoList, err := fs.repo.GetByIDs(ctx, []uint{videoID})
+				if videoList == nil || len(videoList) == 0 {
+					return nil, err
+				}
+				saftCopy := *videoList[0]
+				cacheKey := fmt.Sprintf("video:entiy:%d", saftCopy.ID)
+				if b, err := json.Marshal(saftCopy); err != nil {
+					go func(k string, b []byte) {
+						setCtx, setcel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+						defer setcel()
+						fs.rediscache.SetBytes(setCtx, k, b, time.Hour)
+					}(cacheKey, b)
 
-	return buildOrderedResult(videoIDs, videomap), nil
+				}
+				return *videoList[0], err
+			})
+			//写回本地缓存
+			if err == nil && v != nil {
+				if fs.localcache != nil {
+					safeCopy := *(v.(*video.Video))
+					mu.Lock()
+					videoMap[id] = &safeCopy
+					mu.Unlock()
+					fs.localcache.Set(fmt.Sprintf("video:entiy:%d", safeCopy.ID), safeCopy, time.Hour)
+				}
+			}
+		}(id)
+	}
+	wg.Wait()
+	return buildOrderedResult(videoIDs, videoMap), nil
 }
 func (fs *FeedService) ListLatest(ctx context.Context, limit int64, latestBefore time.Time) error {
 	return nil
