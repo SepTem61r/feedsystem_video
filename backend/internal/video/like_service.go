@@ -19,15 +19,18 @@ type LikeService struct {
 	popularMQ *rabbitmq.PopularityMQ
 }
 
+// isDupKey 判断是否为 MySQL 唯一键冲突错误
 func isDupKey(err error) bool {
 	var mysqlErr *mysql.MySQLError
 	return errors.As(err, &mysqlErr) && mysqlErr.Number == 1062
 }
 
+// NewLikeService 创建 LikeService 实例
 func NewLikeService(repo *LikeRepository, videoRepo *VideoRepository, cache *rediscache.Client, likeMQ *rabbitmq.LikeMQ, popularMQ *rabbitmq.PopularityMQ) *LikeService {
 	return &LikeService{repo: repo, VideoRepo: videoRepo, cache: cache, likeMQ: likeMQ, popularMQ: popularMQ}
 }
 
+// Like 点赞（校验 + 消息队列/事务写入 + 热度更新）
 func (ls *LikeService) Like(ctx context.Context, like *Like) error {
 	if like == nil {
 		return errors.New("like is null")
@@ -97,6 +100,8 @@ func (ls *LikeService) Like(ctx context.Context, like *Like) error {
 	return nil
 
 }
+
+// Unlike 取消点赞（校验 + 消息队列/事务删除 + 热度更新）
 func (ls *LikeService) Unlike(ctx context.Context, like *Like) error {
 	if ls.VideoRepo != nil {
 		ok, err := ls.VideoRepo.IsExist(ctx, like.VideoID)
@@ -156,9 +161,12 @@ func (ls *LikeService) Unlike(ctx context.Context, like *Like) error {
 	return nil
 }
 
+// Isliked 查询是否已点赞
 func (ls *LikeService) Isliked(ctx context.Context, videoID, accountID uint) (bool, error) {
 	return ls.repo.IsLike(ctx, videoID, accountID)
 }
+
+// ListLikedVideos 查询用户点赞的视频列表
 func (ls *LikeService) ListLikedVideos(ctx context.Context, accountID uint) ([]Video, error) {
 	return ls.repo.ListLikedVideos(ctx, accountID)
 }

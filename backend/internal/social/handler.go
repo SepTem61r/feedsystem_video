@@ -11,11 +11,12 @@ type SocialHandler struct {
 	socialService *SocialService
 }
 
+// NewSocialHandler 创建 SocialHandler 实例
 func NewSocialHandler(socialService *SocialService) *SocialHandler {
 	return &SocialHandler{socialService: socialService}
 }
 
-// follow
+// Follow 关注
 func (sh *SocialHandler) Follow(c *gin.Context) {
 	var req FollowerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -38,7 +39,7 @@ func (sh *SocialHandler) Follow(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "follow success"})
 }
 
-// unfollow
+// Unfollow 取消关注
 func (sh *SocialHandler) Unfollow(c *gin.Context) {
 	var req UnFollowerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -61,7 +62,7 @@ func (sh *SocialHandler) Unfollow(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "unfollow success"})
 }
 
-// GetAllFollowers
+// GetAllFollowers 获取所有粉丝
 func (sh *SocialHandler) GetAllFollowers(c *gin.Context) {
 	var req GetAllFollowersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -85,7 +86,7 @@ func (sh *SocialHandler) GetAllFollowers(c *gin.Context) {
 	c.JSON(http.StatusOK, GetAllFollowersResponse{Followers: followers})
 }
 
-// GetAllVloggers
+// GetAllVloggers 获取所有关注
 func (sh *SocialHandler) GetAllVloggers(c *gin.Context) {
 	var req GetAllVloggersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

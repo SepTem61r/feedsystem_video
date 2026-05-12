@@ -11,9 +11,12 @@ type LikeHandler struct {
 	likeService *LikeService
 }
 
+// NewLikeHandler 创建 LikeHandler 实例
 func NewLikeHandler(likeService *LikeService) *LikeHandler {
 	return &LikeHandler{likeService: likeService}
 }
+
+// Like 点赞
 func (lh *LikeHandler) Like(c *gin.Context) {
 	var req LikeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -37,6 +40,7 @@ func (lh *LikeHandler) Like(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "like success"})
 }
 
+// Unlike 取消点赞
 func (lh *LikeHandler) Unlike(c *gin.Context) {
 	var req LikeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -59,6 +63,8 @@ func (lh *LikeHandler) Unlike(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "unlike success"})
 }
+
+// IsLiked 查询是否已点赞
 func (lh *LikeHandler) IsLiked(c *gin.Context) {
 	var req LikeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -82,6 +88,8 @@ func (lh *LikeHandler) IsLiked(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"is_liked": ok})
 }
+
+// ListMyLikedVideos 查询用户点赞的视频列表
 func (lh *LikeHandler) ListMyLikedVideos(c *gin.Context) {
 
 	accountID, err := jwt.GetAccountID(c)

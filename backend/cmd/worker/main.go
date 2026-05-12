@@ -53,11 +53,12 @@ func main() {
 	}
 	defer rabbitClient.Close()
 
+	// Declare exchanges/queues once via the main channel
 	_, _ = rabbitmq.NewLikesCountMQ(rabbitClient)
 	_, _ = rabbitmq.NewPopularityMQ(rabbitClient)
 	_, _ = rabbitmq.NewCommentMQ(rabbitClient)
 	_, _ = rabbitmq.NewSocialMQ(rabbitClient)
-	timelineMQ, err := rabbitmq.NewTimelineMQ(rabbitClient)
+	_, err = rabbitmq.NewTimelineMQ(rabbitClient)
 	if err != nil {
 		log.Fatalf("failed to create timeline mq: %v", err)
 	}
@@ -71,8 +72,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Start workers
-	likeWorker := worker.NewLikeWork(rabbitClient.Ch, videoRepo, likeRepo, "video.popularity.events")
+	// Each worker gets its own channel to avoid sharing a single channel across goroutines.
+	likeCh, err := rabbitClient.Channel()
+	if err != nil {
+		log.Fatalf("failed to open like worker channel: %v", err)
+	}
+	likeWorker := worker.NewLikeWork(likeCh, videoRepo, likeRepo, "like.events")
 	go func() {
 		log.Println("like worker started")
 		if err := likeWorker.Run(ctx); err != nil {
@@ -80,7 +85,11 @@ func main() {
 		}
 	}()
 
-	popularityWorker := worker.NewPopularityWorker(rabbitClient.Ch, redisClient, "video.popularity.cache.queue")
+	popularityCh, err := rabbitClient.Channel()
+	if err != nil {
+		log.Fatalf("failed to open popularity worker channel: %v", err)
+	}
+	popularityWorker := worker.NewPopularityWorker(popularityCh, redisClient, "video.popularity.cache.queue")
 	go func() {
 		log.Println("popularity worker started")
 		if err := popularityWorker.Run(ctx); err != nil {
@@ -88,7 +97,11 @@ func main() {
 		}
 	}()
 
-	commentWorker := worker.NewCommentWorker(rabbitClient.Ch, videoRepo, commentRepo, "comment.events")
+	commentCh, err := rabbitClient.Channel()
+	if err != nil {
+		log.Fatalf("failed to open comment worker channel: %v", err)
+	}
+	commentWorker := worker.NewCommentWorker(commentCh, videoRepo, commentRepo, "comment.events")
 	go func() {
 		log.Println("comment worker started")
 		if err := commentWorker.Run(ctx); err != nil {
@@ -96,7 +109,11 @@ func main() {
 		}
 	}()
 
-	socialWorker := worker.NewSocialWorker(rabbitClient.Ch, socialRepo, accountRepo, "social.events")
+	socialCh, err := rabbitClient.Channel()
+	if err != nil {
+		log.Fatalf("failed to open social worker channel: %v", err)
+	}
+	socialWorker := worker.NewSocialWorker(socialCh, socialRepo, accountRepo, "social.events")
 	go func() {
 		log.Println("social worker started")
 		if err := socialWorker.Run(ctx); err != nil {
@@ -104,8 +121,29 @@ func main() {
 		}
 	}()
 
+	// Outbox publisher gets its own channel.
+	outboxCh, err := rabbitClient.Channel()
+	if err != nil {
+		log.Fatalf("failed to open outbox channel: %v", err)
+	}
+	outboxRabbit := &rabbitmq.RabbitMQ{Conn: rabbitClient.Conn, Ch: outboxCh}
+	timelineMQ, err := rabbitmq.NewTimelineMQ(outboxRabbit)
+	if err != nil {
+		log.Fatalf("failed to create outbox timeline mq: %v", err)
+	}
 	worker.StartOutboxPoller(database, timelineMQ)
-	worker.StartConsumer(timelineMQ, "video.timeline.update.queue", redisClient)
+
+	// Timeline consumer gets its own channel.
+	consumerCh, err := rabbitClient.Channel()
+	if err != nil {
+		log.Fatalf("failed to open consumer channel: %v", err)
+	}
+	consumerRabbit := &rabbitmq.RabbitMQ{Conn: rabbitClient.Conn, Ch: consumerCh}
+	consumerTimelineMQ, err := rabbitmq.NewTimelineMQ(consumerRabbit)
+	if err != nil {
+		log.Fatalf("failed to create consumer timeline mq: %v", err)
+	}
+	worker.StartConsumer(consumerTimelineMQ, "video.timeline.update.queue", redisClient)
 
 	log.Println("all workers started")
 

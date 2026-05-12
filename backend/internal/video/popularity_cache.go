@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// UpdatePopularityCache 更新 Redis 热度缓存（删除详情缓存 + 累加分钟窗口热度值）
 func UpdatePopularityCache(ctx context.Context, cache *rediscache.Client, id uint, change int64) {
 	if cache == nil || id == 0 || change == 0 {
 		return

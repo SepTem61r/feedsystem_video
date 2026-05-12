@@ -13,12 +13,15 @@ type CommentHandler struct {
 	accountRepository *account.AccountRepository
 }
 
+// 创建 CommentHandler 实例
 func NewCommentHandler(commentService *CommentService, accountRepository *account.AccountRepository) *CommentHandler {
 	return &CommentHandler{
 		commentService:    commentService,
 		accountRepository: accountRepository,
 	}
 }
+
+// PublishComment 发布评论
 func (ch *CommentHandler) PublishComment(c *gin.Context) {
 	var req CommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -56,6 +59,7 @@ func (ch *CommentHandler) PublishComment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "publish comment success"})
 }
 
+// DeleteComment 删除评论
 func (ch *CommentHandler) DeleteComment(c *gin.Context) {
 	var req CommentDelRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -78,6 +82,7 @@ func (ch *CommentHandler) DeleteComment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "delete comment success"})
 }
 
+// GetAllComment 获取视频所有评论
 func (ch *CommentHandler) GetAllComment(c *gin.Context) {
 	var req CommentGetAllRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -75,7 +75,7 @@ Content-Type: application/json
 Authorization: Bearer {{auth_token}}
 
 {
-  "title": "my first video",
+  "title": "my 3 video",
   "description": "test1",
   "play_url": "/static/videos/1/20260510/test1.mp4",
   "cover_url": "/static/covers/1/20260510/bird.jpg"
@@ -98,7 +98,7 @@ POST http://localhost:8080/video/getDetail
 Content-Type: application/json
 
 {
-  "id": 4
+  "id": 6
 
 }
 
@@ -107,7 +107,7 @@ POST http://localhost:8080/video/listByButhorID
 Content-Type: application/json
 
 {
-  "author_id": 3
+  "author_id": 2
 }
 
 ### 删除视频
@@ -116,7 +116,7 @@ Content-Type: application/json
 Authorization: Bearer {{auth_token}}
 
 {
-  "id": 1
+  "id": 6
 }
 
 
@@ -130,7 +130,7 @@ Content-Type: application/json
 Authorization: Bearer {{auth_token}}
 
 {
-  "video_id": 5
+  "video_id": 6
 }
 
 ### 取消点赞
@@ -139,7 +139,7 @@ Content-Type: application/json
 Authorization: Bearer {{auth_token}}
 
 {
-  "video_id": 3
+  "video_id": 6
 }
 
 ### 查询是否已点赞
@@ -148,7 +148,7 @@ Content-Type: application/json
 Authorization: Bearer {{auth_token}}
 
 {
-  "video_id": 5
+  "video_id": 6
 }
 
 ### 我的点赞列表

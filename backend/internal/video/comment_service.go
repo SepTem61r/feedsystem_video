@@ -18,6 +18,7 @@ type CommentService struct {
 	commentMQ         *rabbitmq.CommentMQ
 }
 
+// NewCommentService 创建 CommentService 实例
 func NewCommentService(commentRepository *CommentRepository, cache *rediscache.Client, popularMQ *rabbitmq.PopularityMQ, videoRepository *VideoRepository, commentMQ *rabbitmq.CommentMQ) *CommentService {
 	return &CommentService{
 		commentRepository: commentRepository,
@@ -27,6 +28,8 @@ func NewCommentService(commentRepository *CommentRepository, cache *rediscache.C
 		commentMQ:         commentMQ,
 	}
 }
+
+// Publish 发布评论（校验字段 + 消息队列/事务写入 + 热度更新）
 func (cs *CommentService) Publish(ctx context.Context, comment *Comment) error {
 	if comment == nil {
 		return errors.New("comment is require")
@@ -88,6 +91,7 @@ func (cs *CommentService) Publish(ctx context.Context, comment *Comment) error {
 	return nil
 }
 
+// Delete 删除评论（校验权限 + 消息队列/直接删除）
 func (cs *CommentService) Delete(ctx context.Context, commentID, accountID uint) error {
 	comment, err := cs.commentRepository.GetById(ctx, commentID)
 	if err != nil {
@@ -107,6 +111,7 @@ func (cs *CommentService) Delete(ctx context.Context, commentID, accountID uint)
 	return cs.commentRepository.DeleteComment(ctx, comment)
 }
 
+// GetAll 获取视频所有评论
 func (cs *CommentService) GetAll(ctx context.Context, videoID uint) ([]Comment, error) {
 	if videoID <= 0 {
 		return nil, errors.New("video_id is require")

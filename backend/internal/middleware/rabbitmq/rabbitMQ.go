@@ -33,6 +33,13 @@ func NewRabbitMQ(cfg *config.RabbitMQConfig) (*RabbitMQ, error) {
 	}
 	return &RabbitMQ{Conn: conn, Ch: ch}, nil
 }
+func (r *RabbitMQ) Channel() (*amqp.Channel, error) {
+	if r == nil || r.Conn == nil {
+		return nil, errors.New("rabbitmq is not initialized")
+	}
+	return r.Conn.Channel()
+}
+
 func (r *RabbitMQ) Close() error {
 	if r == nil || r.Ch == nil || r.Conn == nil {
 		return nil

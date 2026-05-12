@@ -11,9 +11,9 @@ type LikeMQ struct {
 }
 
 const (
-	likeExchange   = "video.popularity.events"
-	likeQueue      = "video.popularity.events"
-	likeBindingKey = "video.popularity.*"
+	likeExchange   = "like.events"
+	likeQueue      = "like.events"
+	likeBindingKey = "like.*"
 	LikeRK         = "like.like"
 	UnlikeRK       = "like.unlike"
 )

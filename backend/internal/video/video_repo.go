@@ -93,7 +93,7 @@ func (vr *VideoRepository) UpdatePopularity(ctx context.Context, id uint, change
 
 // ChangeLikesCount 原子增减点赞数（不小于0）
 func (vr *VideoRepository) ChangeLikesCount(ctx context.Context, id uint, change int64) error {
-	if err := vr.db.WithContext(ctx).Where("id = ?", id).UpdateColumn("likes_count", gorm.Expr("GREATEST(likes_count + ?, 0)", change)).Error; err != nil {
+	if err := vr.db.WithContext(ctx).Model(&Video{}).Where("id = ?", id).UpdateColumn("likes_count", gorm.Expr("GREATEST(likes_count + ?, 0)", change)).Error; err != nil {
 		return err
 	}
 	return nil
@@ -101,7 +101,7 @@ func (vr *VideoRepository) ChangeLikesCount(ctx context.Context, id uint, change
 
 // ChangePopularity 原子增减热度值（不小于0）
 func (vr *VideoRepository) ChangePopularity(ctx context.Context, id uint, change int64) error {
-	if err := vr.db.WithContext(ctx).Where("id = ?", id).UpdateColumn("popularity", gorm.Expr("GREATEST(popularity + ?, 0)", change)).Error; err != nil {
+	if err := vr.db.WithContext(ctx).Model(&Video{}).Where("id = ?", id).UpdateColumn("popularity", gorm.Expr("GREATEST(popularity + ?, 0)", change)).Error; err != nil {
 		return err
 	}
 	return nil
