@@ -80,8 +80,8 @@ func (fs *FeedService) GetVideoByIDs(ctx context.Context, videoIDs []uint) ([]*v
 	var missedL2 []uint
 	if len(missedL1) > 0 {
 		cacheKeys := make([]string, len(missedL1))
-		for _, id := range missedL1 {
-			cacheKeys[id] = fmt.Sprintf("video:entiy:%d", id)
+		for i, id := range missedL1 {
+			cacheKeys[i] = fmt.Sprintf("video:entity:%d", id)
 		}
 		cacheCtx, cacnel := context.WithTimeout(ctx, 50*time.Millisecond)
 		result, err := fs.rediscache.MGet(cacheCtx, cacheKeys...)
@@ -106,7 +106,7 @@ func (fs *FeedService) GetVideoByIDs(ctx context.Context, videoIDs []uint) ([]*v
 			}
 		} else {
 			missedL2 = missedL1
-			log.Fatal("L2 redis缓存失败，降级L3")
+			log.Printf("L2 Redis MGet 失败，全部降级到 MySQL: %v", err)
 		}
 	}
 	if len(missedL2) == 0 {
@@ -449,7 +449,49 @@ func (fs *FeedService) ListByPopularity(ctx context.Context, limit int, reqAsOf 
 			}
 		}
 		//有数据则解析 ID，查询视频详情并构造返回值
+		if err == nil && len(members) > 0 {
+			ids := make([]uint, 0, len(members))
+			for _, m := range members {
+				u, err := strconv.ParseUint(m, 0, 64)
+				if err == nil && u > 0 {
+					ids = append(ids, uint(u))
+				}
+			}
+			videos, err := fs.repo.GetByIDs(ctx, ids)
+			if err == nil {
+				byId := make(map[uint]*video.Video, len(videos))
+				for _, v := range videos {
+					byId[v.ID] = v
+				}
+				order := make([]*video.Video, 0, len(videos))
+				for _, id := range ids {
+					if v := byId[id]; v != nil {
+						order = append(order, v)
+					}
 
+				}
+				item, err := fs.buildFeedVideos(ctx, order, viewerAccountID)
+				if err != nil {
+					return ListByPopularityResponse{}, err
+				}
+				resp := ListByPopularityResponse{
+					VideoList:  item,
+					AsOf:       asOf.Unix(),
+					NextOffset: offset + len(item),
+					HasMore:    len(item) == limit,
+				}
+				if len(order) > 0 {
+					last := order[len(order)-1]
+					nextPopularity := last.Popularity
+					nextBefore := last.Createtime
+					nextID := last.ID
+					resp.NextLatestPopularity = &nextPopularity
+					resp.NextLatestBefore = &nextBefore
+					resp.NextLatestIDBefore = &nextID
+				}
+				return resp, nil
+			}
+		}
 	}
 	return ListByPopularityResponse{}, nil
 }

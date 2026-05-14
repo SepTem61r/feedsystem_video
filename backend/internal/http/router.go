@@ -2,12 +2,14 @@ package http
 
 import (
 	"feedsystem_video/backend/internal/account"
+	"feedsystem_video/backend/internal/feed"
 	"feedsystem_video/backend/internal/middleware/jwt"
 	"feedsystem_video/backend/internal/middleware/rabbitmq"
 	"feedsystem_video/backend/internal/middleware/ratelimit"
 	rediscache "feedsystem_video/backend/internal/middleware/redis"
 	"feedsystem_video/backend/internal/social"
 	"feedsystem_video/backend/internal/video"
+	"feedsystem_video/backend/worker"
 	"log"
 	"time"
 
@@ -21,7 +23,6 @@ func SetRouter(db *gorm.DB, cache *rediscache.Client, rmq *rabbitmq.RabbitMQ) *g
 		log.Printf("SetTrustedProxies failed: %v", err)
 	}
 	r.Static("/static", "./.run/uploads")
-	// rate_limit
 	// rate_limit
 	loginLimiter := ratelimit.Limit(cache, "account_login", 10, time.Minute, ratelimit.KeyByIP)
 	registerLimiter := ratelimit.Limit(cache, "account_register", 5, time.Hour, ratelimit.KeyByIP)
@@ -130,5 +131,30 @@ func SetRouter(db *gorm.DB, cache *rediscache.Client, rmq *rabbitmq.RabbitMQ) *g
 		protectedSocialGroup.POST("/getallfollowers", socialHandler.GetAllFollowers)
 		protectedSocialGroup.POST("/getallvloggers", socialHandler.GetAllVloggers)
 	}
+	// feed
+	feedRepository := feed.NewFeedRepository(db)
+	feedService := feed.NewFeedService(feedRepository, likeRepository, cache)
+	feedHandler := feed.NewFeedHandler(feedService)
+	feedGroup := r.Group("/feed")
+	feedGroup.Use(jwt.SoftJWTAuth(accountRepository, cache))
+	{
+		feedGroup.POST("/listLatest", feedHandler.ListLatest)
+		feedGroup.POST("/listLikesCount", feedHandler.ListLikesCount)
+		feedGroup.POST("/listByPopularity", feedHandler.ListByPopularity)
+	}
+	protectedFeedGroup := feedGroup.Group("")
+	protectedFeedGroup.Use(jwt.JWTAuth(accountRepository, cache))
+	{
+		protectedFeedGroup.POST("/listByFollowing", feedHandler.ListByFollowing)
+	}
+	//worker
+	timelineMQ, err := rabbitmq.NewTimelineMQ(rmq)
+	if err != nil {
+		log.Printf("timelineMQ init failed (mq disabled): %v", err)
+		//socialMQ = nil
+		timelineMQ = nil
+	}
+	worker.StartOutboxPoller(db, timelineMQ)
+	worker.StartConsumer(timelineMQ, "video.timeline.update.queue", cache)
 	return r
 }

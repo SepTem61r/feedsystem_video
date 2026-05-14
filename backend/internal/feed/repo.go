@@ -20,9 +20,9 @@ func NewFeedRepository(db *gorm.DB) *FeedRepository {
 // ListLatest 从数据库查询最新视频（create_time倒序，支持时间游标）
 func (fr *FeedRepository) ListLatest(ctx context.Context, limit int, latestBefore time.Time) ([]*video.Video, error) {
 	var videos []*video.Video
-	query := fr.db.WithContext(ctx).Model(&video.Video{}).Order("create_time DESC")
+	query := fr.db.WithContext(ctx).Model(&video.Video{}).Order("createtime DESC")
 	if !latestBefore.IsZero() {
-		query = query.Where("create_time < ?", latestBefore)
+		query = query.Where("createtime < ?", latestBefore)
 	}
 	if err := query.Limit(limit).Find(&videos).Error; err != nil {
 		return nil, err
@@ -60,13 +60,13 @@ func (fr *FeedRepository) GetByIDs(ctx context.Context, ids []uint) ([]*video.Vi
 func (fr *FeedRepository) ListByFollowing(ctx context.Context, limit int, viewerAccountID uint, latestBefore time.Time) ([]*video.Video, error) {
 	var videos []*video.Video
 	query := fr.db.WithContext(ctx).Model(&video.Video{}).
-		Order("create_time DESC")
+		Order("createtime DESC")
 	if viewerAccountID > 0 {
 		followingSubQuery := fr.db.WithContext(ctx).Model(&social.Social{}).Select("vlogger_id").Where("follower_id = ?", viewerAccountID)
 		query = query.Where("author_id IN (?)", followingSubQuery)
 	}
 	if !latestBefore.IsZero() {
-		query = query.Where("create_time < ?", latestBefore)
+		query = query.Where("createtime < ?", latestBefore)
 	}
 	if err := query.Limit(limit).Find(&videos).Error; err != nil {
 		return nil, err
@@ -75,10 +75,10 @@ func (fr *FeedRepository) ListByFollowing(ctx context.Context, limit int, viewer
 }
 func (fr *FeedRepository) ListByPopularity(ctx context.Context, limit int, popularityBefore int64, timeBefore time.Time, idBefore uint) ([]*video.Video, error) {
 	var videos []*video.Video
-	query := fr.db.WithContext(ctx).Model(&video.Video{}).Order("popularity DESC, create_time DESC, id DESC")
+	query := fr.db.WithContext(ctx).Model(&video.Video{}).Order("popularity DESC, createtime DESC, id DESC")
 	// 只有当游标完整提供时才加过滤（popularity 允许为 0）
 	if !timeBefore.IsZero() && idBefore > 0 {
-		query = query.Where("(popularity < ?) OR (popularity < ? AND create_time < ?) OR (popularity = ? AND create_time = ? AND id < ?)",
+		query = query.Where("(popularity < ?) OR (popularity < ? AND createtime < ?) OR (popularity = ? AND createtime = ? AND id < ?)",
 			popularityBefore,
 			popularityBefore, timeBefore,
 			popularityBefore, timeBefore, idBefore,

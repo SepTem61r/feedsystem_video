@@ -99,6 +99,8 @@ func (fh *FeedHandler) ListLikesCount(c *gin.Context) {
 	feedItems.VideoList = nonNilFeedVideoItems(feedItems.VideoList)
 	c.JSON(http.StatusOK, feedItems)
 }
+
+// 按照关注排序
 func (fh *FeedHandler) ListByFollowing(c *gin.Context) {
 	var req ListByFollowingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -125,4 +127,53 @@ func (fh *FeedHandler) ListByFollowing(c *gin.Context) {
 	feedItems.VideoList = nonNilFeedVideoItems(feedItems.VideoList)
 	c.JSON(http.StatusOK, feedItems)
 
+}
+
+// 按照热度排序
+func (fh *FeedHandler) ListByPopularity(c *gin.Context) {
+	var req ListByPopularityRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if req.Limit <= 0 || req.Limit > 50 {
+		req.Limit = 10
+	}
+	viewerAccountID, err := jwt.GetAccountID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var LatestIDBefore uint
+	var LatestPopularity int64
+	var LatestBefore time.Time
+	if req.LatestPopularity < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "LatestPopularity must > 0"})
+		return
+	}
+	anyCursor := req.LatestIDBefore != nil || !req.LatestBefore.IsZero()
+	if anyCursor {
+		if req.LatestBefore.IsZero() || req.LatestIDBefore == nil || *req.LatestIDBefore == 0 {
+			c.JSON(400, gin.H{"error": "latest_before and latest_id_before must be provided together"})
+			return
+		}
+		LatestPopularity = req.LatestPopularity
+		LatestBefore = req.LatestBefore
+		LatestIDBefore = *req.LatestIDBefore
+	}
+	resp, err := fh.feedService.ListByPopularity(
+		c.Request.Context(),
+		req.Limit,
+		req.AsOf,
+		req.Offset,
+		viewerAccountID,
+		LatestPopularity,
+		LatestBefore,
+		LatestIDBefore,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resp)
 }

@@ -70,7 +70,7 @@ type ListByPopularityRequest struct {
 
 	// DB fallback 用（可选）
 	LatestPopularity int64     `json:"latest_popularity"`
-	LatestBefore     time.Time `json:"latest_before"`
+	LatestBefore     time.Time `json:"latest_before,omitempty"`
 }
 
 type ListByPopularityResponse struct {
