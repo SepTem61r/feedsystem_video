@@ -1,16 +1,12 @@
 <script setup lang="ts">
 import type { Video } from '../types'
 
-defineProps<{ videos: Video[] }>()
+const props = defineProps<{ videos: Video[] }>()
 const emit = defineEmits<{ click: [id: number] }>()
 
-function placeholderImage(): string {
-  return 'data:image/svg+xml,' + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200">
-      <rect fill="#e0e0e0" width="320" height="200"/>
-      <text fill="#999" font-size="16" text-anchor="middle" x="160" y="105">暂无封面</text>
-    </svg>`
-  )
+function getCoverSrc(coverUrl: string): string {
+  if (!coverUrl || coverUrl.includes('/videos/')) return ''
+  return coverUrl
 }
 </script>
 
@@ -27,11 +23,13 @@ function placeholderImage(): string {
     >
       <div class="grid-cover">
         <img
-          :src="v.cover_url || placeholderImage()"
+          v-if="getCoverSrc(v.cover_url)"
+          :src="v.cover_url"
           :alt="v.title"
           loading="lazy"
-          @error="($event.target as HTMLImageElement).src = placeholderImage()"
+          @error="($event.target as HTMLImageElement).style.display = 'none'"
         />
+        <div v-if="!getCoverSrc(v.cover_url)" class="cover-placeholder">暂无封面</div>
       </div>
       <p class="grid-title">{{ v.title || '无标题' }}</p>
       <p class="grid-likes">{{ v.likes_count }} 赞</p>
@@ -59,11 +57,21 @@ function placeholderImage(): string {
   border-radius: var(--radius);
   overflow: hidden;
   background: #e0e0e0;
+  position: relative;
 }
 .grid-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 13px;
 }
 
 .grid-title {

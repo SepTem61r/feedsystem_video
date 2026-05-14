@@ -1,5 +1,13 @@
 <script setup lang="ts">
-defineProps<{ src: string; poster?: string }>()
+import { computed } from 'vue'
+
+const props = defineProps<{ src: string; poster?: string }>()
+
+const validPoster = computed(() => {
+  if (!props.poster) return undefined
+  if (props.poster.includes('/videos/')) return undefined
+  return props.poster
+})
 </script>
 
 <template>
@@ -7,7 +15,7 @@ defineProps<{ src: string; poster?: string }>()
     <video
       class="video-player"
       :src="src"
-      :poster="poster"
+      :poster="validPoster"
       controls
       playsinline
       preload="metadata"

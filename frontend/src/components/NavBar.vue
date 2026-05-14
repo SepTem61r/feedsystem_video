@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
+
+const hideNav = computed(() => route.meta.hideNav === true)
 
 function goUpload() {
   if (!auth.isLoggedIn) {
@@ -15,7 +19,7 @@ function goUpload() {
 </script>
 
 <template>
-  <nav class="navbar">
+  <nav v-if="!hideNav" class="navbar">
     <div class="navbar-inner container">
       <router-link to="/" class="logo">FeedVideo</router-link>
       <div class="navbar-actions">

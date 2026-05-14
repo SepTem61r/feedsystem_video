@@ -97,6 +97,21 @@ async function toggleFollow() {
   }
 }
 
+const deleteLoading = ref(false)
+
+async function handleDelete() {
+  if (!confirm('确定要删除这个视频吗？')) return
+  deleteLoading.value = true
+  try {
+    await videoApi.delete({ id: videoId() })
+    router.push('/')
+  } catch (e: any) {
+    alert(e.response?.data?.error || '删除失败')
+  } finally {
+    deleteLoading.value = false
+  }
+}
+
 function goProfile(id: number) {
   router.push(`/profile/${id}`)
 }
@@ -148,6 +163,14 @@ watch(() => route.params.id, () => {
             @click="toggleFollow"
           >
             {{ isFollowing ? '已关注' : '+ 关注' }}
+          </button>
+          <button
+            v-if="video.author_id === auth.currentUser?.id"
+            class="btn btn-outline btn-danger"
+            :disabled="deleteLoading"
+            @click="handleDelete"
+          >
+            {{ deleteLoading ? '删除中...' : '删除视频' }}
           </button>
         </div>
       </div>
@@ -215,5 +238,14 @@ watch(() => route.params.id, () => {
 .detail-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+}
+.btn-danger {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+.btn-danger:hover {
+  background: var(--color-error);
+  color: #fff;
 }
 </style>

@@ -83,10 +83,15 @@ async function handleSubmit() {
     const playUrl = videoRes.data.url
     stage.videoDone = true
 
-    let coverUrl = videoRes.data.cover_url || ''
+    let coverUrl = ''
     if (coverFile.value) {
-      const coverRes = await videoApi.uploadCover(coverFile.value)
-      coverUrl = coverRes.data.url
+      try {
+        const coverRes = await videoApi.uploadCover(coverFile.value)
+        coverUrl = coverRes.data.url || ''
+      } catch {
+        // 封面上传失败不阻塞发布，降级为无封面
+        console.warn('封面上传失败，将使用默认封面')
+      }
     }
     stage.coverDone = true
 

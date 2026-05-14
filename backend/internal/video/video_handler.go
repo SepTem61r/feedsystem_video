@@ -189,7 +189,7 @@ func (vh *VideoHandler) UploadCover(c *gin.Context) {
 	relDir := filepath.Join("covers", fmt.Sprintf("%d", authorID), date)
 	root := filepath.Join(".run", "uploads")
 	absDir := filepath.Join(root, relDir)
-	if err := os.Mkdir(absDir, 0o755); err != nil {
+	if err := os.MkdirAll(absDir, 0o755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

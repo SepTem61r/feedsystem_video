@@ -3,7 +3,7 @@ package social
 import "feedsystem_video/backend/internal/account"
 
 type Social struct {
-	ID         uint `gorm:"primaryKey", json:"id"`
+	ID         uint `gorm:"primaryKey" json:"id"`
 	FollowerID uint `gorm:"not null;index:idx_social_follower;uniqueIndex:idx_social_follower_vlogger"` //fans
 	VloggerID  uint `gorm:"not null;index:idx_social_vlogger;uniqueIndex:idx_social_follower_vlogger"`  //up
 }

@@ -52,7 +52,7 @@ func buildOrderedResult(orderedIDs []uint, dataMap map[uint]*video.Video) []*vid
 func (fs *FeedService) GetVideoByIDs(ctx context.Context, videoIDs []uint) ([]*video.Video, error) {
 
 	// 采用 L1(本地缓存) -> L2(Redis) -> L3(MySQL) 三级架构
-	if len(videoIDs) == 0 || videoIDs == nil {
+	if len(videoIDs) == 0 {
 		return []*video.Video{}, nil
 	}
 	videoMap := make(map[uint]*video.Video)
@@ -60,7 +60,6 @@ func (fs *FeedService) GetVideoByIDs(ctx context.Context, videoIDs []uint) ([]*v
 	var missedL1 []uint
 	for _, id := range videoIDs {
 		cacheKey := fmt.Sprintf("video:entiy:%d", id)
-		fs.localcache.Get(cacheKey)
 		if fs.localcache != nil {
 			if v, found := fs.localcache.Get(cacheKey); found {
 				if data, ok := v.(video.Video); ok {
@@ -68,8 +67,8 @@ func (fs *FeedService) GetVideoByIDs(ctx context.Context, videoIDs []uint) ([]*v
 					continue
 				}
 			}
-			missedL1 = append(missedL1, id)
 		}
+		missedL1 = append(missedL1, id)
 	}
 	if len(missedL1) == 0 {
 		return buildOrderedResult(videoIDs, videoMap), nil
@@ -81,7 +80,7 @@ func (fs *FeedService) GetVideoByIDs(ctx context.Context, videoIDs []uint) ([]*v
 	if len(missedL1) > 0 {
 		cacheKeys := make([]string, len(missedL1))
 		for i, id := range missedL1 {
-			cacheKeys[i] = fmt.Sprintf("video:entity:%d", id)
+			cacheKeys[i] = fmt.Sprintf("video:entiy:%d", id)
 		}
 		cacheCtx, cacnel := context.WithTimeout(ctx, 50*time.Millisecond)
 		result, err := fs.rediscache.MGet(cacheCtx, cacheKeys...)
@@ -96,7 +95,7 @@ func (fs *FeedService) GetVideoByIDs(ctx context.Context, videoIDs []uint) ([]*v
 							videoMap[id] = &v
 							if fs.localcache != nil {
 								//写入本地缓存
-								fs.localcache.Set(cacheKeys[id], v, time.Hour)
+								fs.localcache.Set(cacheKeys[i], v, 5*time.Second)
 							}
 							continue
 						}
@@ -133,9 +132,8 @@ func (fs *FeedService) GetVideoByIDs(ctx context.Context, videoIDs []uint) ([]*v
 						defer setcel()
 						fs.rediscache.SetBytes(setCtx, k, b, time.Hour)
 					}(cacheKey, b)
-
 				}
-				return *videoList[0], err
+				return videoList[0], err
 			})
 			//写回本地缓存
 			if err == nil && v != nil {
@@ -144,7 +142,7 @@ func (fs *FeedService) GetVideoByIDs(ctx context.Context, videoIDs []uint) ([]*v
 					mu.Lock()
 					videoMap[id] = &safeCopy
 					mu.Unlock()
-					fs.localcache.Set(fmt.Sprintf("video:entiy:%d", safeCopy.ID), safeCopy, time.Hour)
+					fs.localcache.Set(fmt.Sprintf("video:entiy:%d", safeCopy.ID), safeCopy, 5*time.Second)
 				}
 			}
 		}(id)

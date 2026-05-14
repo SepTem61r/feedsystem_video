@@ -1,8 +1,21 @@
-server: 8080
+server:
+  port: 8080
 
 database:
-  host: localhost
+  host: mysql
   port: 3306
   user: root
-  password: 12345678
-  dbname: feedsystem
+  password: "12345678"
+  DBname: feedsystem
+
+redis:
+  host: redis
+  port: 6379
+  password: "123456"
+  db: 0
+
+rabbitmq:
+  host: rabbitmq
+  port: 5672
+  username: admin
+  password: "password123"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { FeedVideoItem } from '../types'
 
 const props = defineProps<{ video: FeedVideoItem }>()
@@ -10,26 +11,29 @@ function formatCount(n: number): string {
   return String(n)
 }
 
-function placeholderImage(): string {
-  // inline SVG数据URI作为默认封面
-  return 'data:image/svg+xml,' + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200">
-      <rect fill="#e0e0e0" width="320" height="200"/>
-      <text fill="#999" font-size="16" text-anchor="middle" x="160" y="105">暂无封面</text>
-    </svg>`
-  )
+// cover_url 为视频路径（旧数据）时跳过，其余非空即当图片加载
+function isVideoPath(url: string): boolean {
+  return url.includes('/videos/')
 }
+
+const coverSrc = computed(() => {
+  const u = props.video.cover_url
+  if (!u || isVideoPath(u)) return ''
+  return u
+})
 </script>
 
 <template>
   <div class="video-card" @click="emit('click', video.id)">
     <div class="card-cover">
       <img
-        :src="video.cover_url || placeholderImage()"
+        v-if="coverSrc"
+        :src="coverSrc"
         :alt="video.title"
         loading="lazy"
-        @error="($event.target as HTMLImageElement).src = placeholderImage()"
+        @error="($event.target as HTMLImageElement).style.display = 'none'"
       />
+      <div v-if="!coverSrc" class="cover-placeholder">暂无封面</div>
       <div class="card-likes">{{ formatCount(video.likes_count) }} 赞</div>
     </div>
     <div class="card-body">
@@ -63,6 +67,15 @@ function placeholderImage(): string {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 14px;
 }
 
 .card-likes {

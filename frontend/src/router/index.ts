@@ -19,6 +19,12 @@ const router = createRouter({
     {
       path: '/',
       name: 'Feed',
+      component: () => import('../pages/SwipeFeed.vue'),
+      meta: { hideNav: true },
+    },
+    {
+      path: '/explore',
+      name: 'Explore',
       component: () => import('../pages/FeedPage.vue'),
     },
     {
